@@ -1,0 +1,26 @@
+{
+  "name": "recoup",
+  "version": "1.0.0",
+  "description": "Recoup — AI Revenue Recovery Agent (Razorpay Buildathon Track 03)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/recovery.test.js && node tests/phase2a.test.js && node tests/phase2b.test.js",
+    "test:phase2a": "node tests/phase2a.test.js",
+    "test:phase2b": "node tests/phase2b.test.js"
+  },
+  "keywords": [
+    "razorpay",
+    "revenue-recovery",
+    "ai-agent",
+    "guardrails"
+  ],
+  "author": "Recoup Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
