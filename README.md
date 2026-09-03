@@ -4,6 +4,17 @@
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/shreyansh-sinha-1509s/Recoup)
 
+## 🚀 Live Demo
+
+[**Open Recoup Live Server**](https://recoup-5bdk.onrender.com)  
+[**Open Recoup Dashboard**](https://recoup-5bdk.onrender.com/dashboard.html)  
+[**Backend Health Check**](https://recoup-5bdk.onrender.com/health)  
+[**Results API**](https://recoup-5bdk.onrender.com/api/results)
+
+> Recoup is deployed on Render for hackathon demonstration. Payment processing uses Razorpay Test Mode / simulation and does not process real payments.
+
+---
+
 Recoup is an autonomous, AI-assisted Revenue Recovery Agent built for **Razorpay Buildathon 2026 (Track 03 — AI Revenue Recovery)**. It diagnoses failed payment root causes, formulates bounded recovery recommendations, enforces deterministic financial safety guardrails, and independently verifies settled revenue.
 
 ---
@@ -218,17 +229,15 @@ Recoup operates out-of-the-box with **zero external credentials required**:
 
 ## 12. Deployment (Render Web Service)
 
-Recoup is configured for one-click deployment to **Render** via `render.yaml`.
+Recoup is deployed live as a Web Service on **Render**:
+- **Live URL**: [https://recoup-5bdk.onrender.com](https://recoup-5bdk.onrender.com)
+- **Live Dashboard**: [https://recoup-5bdk.onrender.com/dashboard.html](https://recoup-5bdk.onrender.com/dashboard.html)
+- **Health Check**: [https://recoup-5bdk.onrender.com/health](https://recoup-5bdk.onrender.com/health)
 
-### Render Deployment Steps:
+### Blueprint Deployment:
 1. Click the **Deploy to Render** button at the top of this README, or create a new **Web Service** on [Render](https://render.com).
 2. Connect the repository `https://github.com/shreyansh-sinha-1509s/Recoup`.
-3. Configure settings:
-   - **Environment**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Health Check Path**: `/health`
-4. Deploy the service.
+3. Render automatically provisions the service according to `render.yaml` (`Node` runtime, `npm install`, `npm start`, `/health` check).
 
 ---
 
