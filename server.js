@@ -70,9 +70,9 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Root endpoint serves dashboard.html
+// Root endpoint serves index.html (Homepage)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // 404 handler for API routes
