@@ -131,16 +131,37 @@
             transition: border-color 0.2s ease;
         }
 
+        .brand-header-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-logo-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: cover;
+            display: block;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
         .brand .name {
             font-weight: 600;
             font-size: 15px;
             color: var(--ink);
+            line-height: 1.2;
         }
 
         .brand .sub {
             color: var(--muted);
-            font-size: 12px;
+            font-size: 11.5px;
             margin-top: 2px;
+            line-height: 1.2;
         }
 
         .sidebar-navigation {
@@ -1147,8 +1168,13 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="brand">
-                <div class="name">Recovery Ledger</div>
-                <div class="sub">Payment failure agent</div>
+                <a href="/" class="brand-header-link">
+                    <img src="assets/recoup-logo.png" alt="Recoup logo" class="brand-logo-img">
+                    <div>
+                        <div class="name">Recoup</div>
+                        <div class="sub">Payment failure agent</div>
+                    </div>
+                </a>
             </div>
         </div>
         <div class="sidebar-navigation">
