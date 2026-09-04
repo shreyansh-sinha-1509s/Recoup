@@ -155,7 +155,8 @@
             flex-direction: column;
         }
 
-        .nav button {
+        .nav button,
+        .nav a {
             all: unset;
             cursor: pointer;
             padding: 10px 24px;
@@ -165,14 +166,18 @@
             transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
             box-sizing: border-box;
             width: 100%;
+            display: block;
+            text-decoration: none;
         }
 
-        .nav button:hover {
+        .nav button:hover,
+        .nav a:hover {
             color: var(--ink);
             background: var(--surface-hover);
         }
 
-        .nav button.active {
+        .nav button.active,
+        .nav a.active {
             color: var(--ink);
             border-left: 2px solid var(--accent);
             background: var(--accent-soft);
@@ -1148,6 +1153,7 @@
         </div>
         <div class="sidebar-navigation">
             <nav class="nav">
+                <a href="/" class="nav-item">Home</a>
                 <button data-view="control" class="active">Control center</button>
                 <button data-view="ledger">Case ledger</button>
                 <button data-view="guardrails">Guardrails</button>
