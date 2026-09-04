@@ -1,257 +1,322 @@
-# Recoup
+# 💰 Recoup — Recover Revenue. Intelligently.
 
-> **Recover revenue. Intelligently.**
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/shreyansh-sinha-1509s/Recoup)
-
-## 🚀 Live Demo
-
-[**Open Recoup Live Server**](https://recoup-5bdk.onrender.com)  
-[**Open Recoup Dashboard**](https://recoup-5bdk.onrender.com/dashboard.html)  
-[**Backend Health Check**](https://recoup-5bdk.onrender.com/health)  
-[**Results API**](https://recoup-5bdk.onrender.com/api/results)
-
-> Recoup is deployed on Render for hackathon demonstration. Payment processing uses Razorpay Test Mode / simulation and does not process real payments.
+🌐 **Live Demo:** 👉 [https://recoup-eight-rouge.vercel.app/](https://recoup-eight-rouge.vercel.app/)  
+📊 **Control Center:** 👉 [https://recoup-eight-rouge.vercel.app/dashboard.html](https://recoup-eight-rouge.vercel.app/dashboard.html)  
+🔗 **GitHub Repository:** 👉 [https://github.com/shreyansh-sinha-1509s/Recoup](https://github.com/shreyansh-sinha-1509s/Recoup)  
 
 ---
 
-Recoup is an autonomous, AI-assisted Revenue Recovery Agent built for **Razorpay Buildathon 2026 (Track 03 — AI Revenue Recovery)**. It diagnoses failed payment root causes, formulates bounded recovery recommendations, enforces deterministic financial safety guardrails, and independently verifies settled revenue.
+## 📌 Overview
 
----
+**Recoup** is an AI-powered revenue recovery agent designed to help merchants recover revenue lost to failed digital payments.
 
-## 1. Project Overview
-
-Payment declines are a major source of revenue leakage for digital merchants. Standard automated retry systems blindly resubmit transactions, triggering cardholder disputes, bank rate-limiting, and unnecessary processing fees.
-
-**Recoup** introduces an intelligent, bounded recovery workflow:
-- **Diagnose before acting**: Classifies known bank codes deterministically and employs Anthropic Claude Haiku 4.5 for ambiguous failures.
-- **Enforce strict guardrails**: Deterministic rules govern retry delays, maximum attempt limits, customer incentive caps, and high-value risk holds.
-- **Execute & Verify independently**: Retries are dispatched via Razorpay Test Mode and verified independently before being accounted as recovered.
-
----
-
-## 2. The Problem
-
-- **Blind Retries Fail**: Retrying an `insufficient_funds` decline immediately will fail 99% of the time, whereas retrying after salary cycles (+24h) yields high recovery rates.
-- **Fraud & Dispute Exposure**: Retrying suspicious or high-value transactions without human oversight leads to chargebacks and payment gateway penalties.
-- **Uncontrolled AI Agents**: Giving an LLM open-ended write authority over financial systems introduces catastrophic risk of unauthorized transactions or runaway retry loops.
-
----
-
-## 3. The Solution
-
-Recoup implements an 8-stage bounded state machine:
-
-$$\text{Detect} \longrightarrow \text{Diagnose} \longrightarrow \text{Recommend} \longrightarrow \text{Guardrail Check} \longrightarrow \text{Execute} \longrightarrow \text{Verify} \longrightarrow \text{Recover / Escalate}$$
-
-```
-┌─────────────────┐
-│ 1. DETECTED     │ Payment failure captured with raw gateway error code
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 2. DIAGNOSED    │ Root cause identified (Rule Engine or AI Agent)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 3. DECISION     │ Bounded recovery action proposed (Recommendation Only)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 4. GUARDRAIL    │ Deterministic policy gate (PASSED vs BLOCKED)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 5. EXECUTED     │ Dispatched via Razorpay Test Mode / API Adapter
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 6. VERIFIED     │ Independent gateway verification (CAPTURED vs DECLINED)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ 7. RECOVERED    │ State transitioned to RECOVERED (or ESCALATED on failure)
-└─────────────────┘
-```
-
----
-
-## 4. Core Architecture Principle
+It detects failed payment attempts, diagnoses the underlying failure root cause, recommends a bounded recovery action, enforces deterministic financial safety guardrails, executes permitted recovery actions through Razorpay Test Mode, and independently verifies whether the payment was actually captured before accounting revenue as recovered.
 
 $$\mathbf{\text{AI Recommends}} \;\longrightarrow\; \mathbf{\text{Deterministic Guardrails Authorize}} \;\longrightarrow\; \mathbf{\text{Razorpay Executes}} \;\longrightarrow\; \mathbf{\text{Verification Confirms}}$$
 
-1. **AI has ZERO direct financial authority**: The AI agent proposes diagnoses, retry delays, and customer recovery messages. It cannot authorize transactions, move money, or bypass safety bounds.
-2. **Deterministic Guardrails are Absolute**: Code-level policies validate all recommendations against business rules, risk thresholds, and attempt counters.
-3. **Execution and Verification are Separated**: Dispatched retries are never marked as recovered until an independent verification step confirms `status: CAPTURED`.
+The system is engineered to safely maximize recoverable merchant revenue while actively preventing unsafe retry loops, excessive attempts, unauthorized high-value retries, and automated actions on fraud-risk transactions.
+
+> [!NOTE]  
+> **Demonstration Mode Notice**: This demonstration uses **Razorpay Test Mode** / deterministic simulation where live merchant credentials are not configured. It is designed to demonstrate autonomous recovery architecture safely and does not process live payment card charges.
 
 ---
 
-## 5. Key Features
+## 🎯 Problem Statement
 
-- **Failure Detection & Ingestion**: Ingests failed payment batches with transaction metadata and gateway error codes.
-- **Hybrid Diagnosis Engine**:
-  - Direct deterministic mapping for standard Razorpay error codes (`BAD_REQUEST_ERROR`, `GATEWAY_ERROR`).
-  - Anthropic Claude Haiku 4.5 reasoning for ambiguous, multi-factor declines.
-  - Offline fallback reasoning when external LLM APIs are unreachable.
-- **Deterministic Policy Guardrails**: Enforces backoff delays, attempt limits, and exclusion rules.
-- **Risk & Fraud Protection**: Zero automated retries on fraud holds or transactions $>₹50,000$.
-- **Razorpay Adapter**: Cleanly separates `RAZORPAY_TEST_MODE` local simulation from `RAZORPAY_TEST_API` live test credentials.
-- **Audit Trail & Case Ledger**: Every transaction maintains an immutable step-by-step reasoning log with actor stamps (`SYSTEM`, `RULE_ENGINE`, `AI_AGENT`, `GUARDRAIL`, `RAZORPAY`, `VERIFIER`).
-- **Control Center & Visual Analytics**:
-  - **KPI Metrics Strip**: Revenue at Risk, Recovered Revenue, Recovery Rate, Batch Size.
-  - **Recovery Pipeline**: Interactive 6-stage flow visualizer synced live to selected Case Ledger transactions.
-  - **Recovery Analytics**: Recovered Revenue Trend Chart, Failure Distribution Donut Chart, Stepped Conversion Funnel, and Category Performance breakdown.
-  - **Dark / Light Theme**: Professional fintech operations UI with persistent `localStorage` theme toggling.
+Failed payments are a significant source of revenue leakage for digital merchants. When a payment declines, the default instinct is often to retry immediately or repeatedly. However, a crude retry-everything approach is dangerous and ineffective:
+
+- **Temporary vs. Structural Failures**: An `insufficient_funds` decline will fail if retried immediately, but succeeds when scheduled after salary/billing cycles (+24h).
+- **Payment Method Incompatibility**: Expired cards or invalid authentication require alternate payment links, not automated backend charge retries.
+- **Customer Experience**: Repeated rapid retries trigger multiple SMS alerts, exhaust bank velocity limits, and irritate customers.
+- **High-Value Exposure**: Large transactions ($>₹50,000$) represent substantial chargeback and operational risk requiring controlled escalation.
+- **Fraud & Risk Compliance**: Risk-flagged and stolen card declines must never be auto-retried.
+- **Execution $\neq$ Recovery**: A dispatched payment retry is merely an attempt; revenue cannot be claimed as recovered without independent gateway confirmation.
+
+Recoup addresses these challenges by enforcing a bounded, auditable, and independently verified recovery decision cycle.
 
 ---
 
-## 6. Financial Guardrails
+## 💡 Solution
 
-All recovery actions must satisfy deterministic code-level rules before dispatch:
+Recoup replaces uncoordinated retry scripts with a structured 8-stage decision pipeline:
 
-| Failure Category | Guardrail Rule | Maximum Limit | Action on Exceeded |
-|---|---|---|---|
-| **Insufficient funds** | Retry after **24 hours** | **2 attempts** | Escalate to Ops Queue |
+```text
+       Failed Payment Detected
+                 │
+                 ▼
+          Detect & Ingest
+                 │
+                 ▼
+       Root-Cause Diagnosis
+                 │
+                 ▼
+        AI Recommendation
+                 │
+                 ▼
+    Deterministic Guardrails
+                 │
+                 ▼
+     Permitted Recovery Action
+                 │
+                 ▼
+    Razorpay Test Mode Execution
+                 │
+                 ▼
+      Independent Verification
+                 │
+         ────────┴────────
+        │                 │
+        ▼                 ▼
+   RECOVERED          ESCALATED
+```
+
+> [!IMPORTANT]  
+> **Strict Separation of Concerns**: The AI layer does **NOT** have authorization to move money, adjust retry counters, or bypass guardrails. Code-level deterministic policies strictly govern all execution boundaries.
+
+---
+
+## 🚀 Key Features
+
+- 🔍 **Failed Payment Detection**  
+  Captures failed transaction events across batches, extracting gateway error codes, amounts, timestamps, and customer metadata to compute live revenue at risk.
+
+- 🧠 **AI-Assisted Diagnosis**  
+  Combines deterministic rule mapping for standard gateway error codes (`BAD_REQUEST_ERROR`, `GATEWAY_ERROR`) with Anthropic Claude Haiku 4.5 reasoning for ambiguous, multi-factor decline scenarios.
+
+- 🛡️ **Deterministic Financial Guardrails**  
+  Enforces code-level retry limits, mandatory backoff delays, high-value risk holds, customer incentive caps ($\le 10\%$), and fraud-risk exclusions before any action can be dispatched.
+
+- 💳 **Razorpay Test Mode Execution**  
+  Dispatches permitted recovery actions through the Razorpay integration layer, utilizing deterministic Test Mode simulation when API keys are absent and live Test API adapters when configured.
+
+- ✅ **Independent Verification**  
+  Separates execution from settlement. Transactions are only marked `RECOVERED` after an independent verification check confirms `status: CAPTURED`.
+
+- 📊 **Recovery Analytics & Funnel**  
+  Live visual operations dashboard computing revenue at risk, recovered revenue, recovery rate ($\%$) with trend charts, failure distribution donuts, and conversion funnels.
+
+- 📋 **Immutable Audit Trail & Case Ledger**  
+  Every transaction maintains a chronological audit log detailing detection, diagnosis, AI reasoning, guardrail evaluations, execution provider references, and verification confirmations.
+
+- ⚠️ **Safe Human Escalation**  
+  Transactions exceeding retry limits, high-value items, or fraud-flagged cases are automatically routed to the operations escalation queue.
+
+- 🌗 **Light/Dark Fintech Interface**  
+  Restrained internal-operations console built with custom CSS tokens, supporting persistent theme preferences and responsive desktop/mobile layouts.
+
+---
+
+## 🔄 Recovery Workflow
+
+```text
+01 Detect ──► 02 Diagnose ──► 03 Recommend ──► 04 Guardrail ──► 05 Execute ──► 06 Verify ──► 07 Recover / 08 Escalate
+```
+
+### 01 — Detect
+Identify failed payments from merchant batches and calculate live revenue at risk.
+
+### 02 — Diagnose
+Classify the decline reason using direct deterministic rule mapping for known codes and Claude AI for complex or ambiguous failure descriptions.
+
+### 03 — Recommend
+Formulate a bounded recovery action proposal (e.g., scheduled retry backoff, customer payment link, or escalation recommendation).
+
+### 04 — Guardrail
+Evaluate the proposal against deterministic policy rules. The guardrail engine independently decides whether to authorize or block the action.
+
+### 05 — Execute
+Dispatch permitted recovery actions through the Razorpay execution layer (generating a unique provider reference).
+
+### 06 — Verify
+Query the payment provider to independently verify the capture state (`CAPTURED` vs. `DECLINED`).
+
+### 07 — Recover
+Transition the transaction state to `RECOVERED` and update recovered revenue metrics only upon verified payment capture.
+
+### 08 — Escalate
+Safely escalate blocked, high-risk, exhausted, or unverifiable transactions to the manual operations review queue.
+
+---
+
+## 🛡️ AI Safety — AI Recommends, Code Decides
+
+Recoup implements a strict boundary architecture where AI reasoning is strictly advisory and completely decoupled from financial execution:
+
+```text
+                ┌───────────────────────────────────┐
+                │        AI Layer (Claude)          │
+                │     Advisory Diagnosis Only       │
+                └─────────────────┬─────────────────┘
+                                  │
+                                  ▼
+                ┌───────────────────────────────────┐
+                │   Proposed Action Recommendation  │
+                │     (Zero Direct Authority)       │
+                └─────────────────┬─────────────────┘
+                                  │
+                                  ▼
+                ┌───────────────────────────────────┐
+                │     Deterministic Validator       │
+                │   Schema & Integrity Checking     │
+                └─────────────────┬─────────────────┘
+                                  │
+                                  ▼
+                ┌───────────────────────────────────┐
+                │     Deterministic Guardrails      │
+                │    Policy Engine & Bounds Check   │
+                └─────────┬───────────────────┬─────┘
+                          │                   │
+                     PASS │                   │ BLOCK
+                          ▼                   ▼
+                ┌──────────────────┐ ┌──────────────────┐
+                │ Razorpay Test    │ │ Ops Escalation   │
+                │ Mode Execution   │ │ Queue (Manual)   │
+                └─────────┬────────┘ └──────────────────┘
+                          │
+                          ▼
+                ┌──────────────────┐
+                │   Independent    │
+                │   Verification   │
+                └─────────┬────────┘
+                          │
+                          ▼
+                ┌──────────────────┐
+                │ Revenue Recovery │
+                │ Confirmed        │
+                └──────────────────┘
+```
+
+### Active Deterministic Policy Rules:
+
+| Failure Category | Guardrail Policy | Maximum Limit | Action on Exceeded |
+| :--- | :--- | :--- | :--- |
+| **Insufficient funds** | Scheduled retry after **24 hours** | **2 attempts** | Escalate to Ops Queue |
 | **Card expired** | Generate alternate payment link | **1 link** | Escalate to Ops Queue |
-| **Bank technical decline** | Immediate retry | **1 attempt** | Escalate to Ops Queue |
+| **Bank technical decline** | Immediate technical retry | **1 attempt** | Escalate to Ops Queue |
 | **Network timeout** | Immediate retry | **1 attempt** | Escalate to Ops Queue |
 | **Risk / Fraud hold** | **Never auto-retry** | **0 attempts** | Immediate Escalate / Human Review |
 | **High-value hold** | Transactions **> ₹50,000** | **0 auto-retries** | Immediate Escalate / Human Review |
-| **Incentive cap** | Maximum discount / incentive | **10%** | Hard capped by policy validator |
+| **Incentive cap** | Customer recovery incentive | **$\le 10\%$ discount** | Hard capped by policy validator |
 
 ---
 
-## 7. Technology Stack
+## 🏗️ Architecture & Deployment
 
-- **Frontend**: Vanilla HTML5, Vanilla CSS3 (Custom Design System tokens), Vanilla JavaScript (No React, no bloated dependencies, instant load performance).
-- **Backend**: Node.js, Express.js.
-- **Database**: SQLite via Node.js native `node:sqlite` (`DatabaseSync` — zero native rebuild dependencies, lightweight and embedded).
-- **AI Model**: Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) with structured JSON schema outputs and deterministic offline fallback.
-- **Payment Gateway**: Razorpay Test Mode simulation adapter & Test API integration.
+Recoup is deployed across a decoupled, cloud-native architecture:
+
+```text
+  ┌──────────────────────────────────────────────────────────┐
+  │                 Vercel (Static Frontend)                 │
+  │  • Homepage (index.html)                                 │
+  │  • Control Center (dashboard.html)                       │
+  │  • Custom Vanilla CSS Design System                      │
+  └────────────────────────────┬─────────────────────────────┘
+                               │ HTTPS / JSON API
+                               ▼
+  ┌──────────────────────────────────────────────────────────┐
+  │                 Render (Web Service / API)               │
+  │  • Node.js & Express API Server                          │
+  │  • Embedded SQLite Database (node:sqlite)                │
+  │  • Deterministic Guardrails Engine (policy.js)           │
+  │  • Claude AI Diagnostics (Anthropic API / Offline Fallback) │
+  │  • Razorpay Test Mode Adapter (razorpay.js)              │
+  └──────────────────────────────────────────────────────────┘
+```
+
+- **Frontend (Vercel)**: Fast, lightweight static UI with zero framework overhead.
+- **Backend (Render)**: Express.js REST API with native Node.js SQLite persistence (`node:sqlite`).
+- **AI Integration**: Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) with deterministic offline fallback for offline/demo reliability.
+- **Payment Gateway**: Razorpay Test Mode execution layer.
 
 ---
 
-## 8. Project Structure
+## 🔗 Live Links & API Endpoints
+
+| Resource | URL |
+| :--- | :--- |
+| **Live Homepage** | [https://recoup-eight-rouge.vercel.app/](https://recoup-eight-rouge.vercel.app/) |
+| **Control Center (Dashboard)** | [https://recoup-eight-rouge.vercel.app/dashboard.html](https://recoup-eight-rouge.vercel.app/dashboard.html) |
+| **Live Backend Base** | [https://recoup-5bdk.onrender.com/](https://recoup-5bdk.onrender.com/) |
+| **Backend Health Check** | [https://recoup-5bdk.onrender.com/health](https://recoup-5bdk.onrender.com/health) |
+| **Results & Cases API** | [https://recoup-5bdk.onrender.com/api/results](https://recoup-5bdk.onrender.com/api/results) |
+| **Guardrails Policies API** | [https://recoup-5bdk.onrender.com/api/guardrails](https://recoup-5bdk.onrender.com/api/guardrails) |
+| **GitHub Repository** | [https://github.com/shreyansh-sinha-1509s/Recoup](https://github.com/shreyansh-sinha-1509s/Recoup) |
+
+---
+
+## 📁 Repository Structure
 
 ```text
 Recoup/
-├── dashboard.html             # Control Center frontend (Vanilla JS/HTML/CSS)
+├── index.html                 # Public homepage & product overview
+├── dashboard.html             # Control Center & Case Ledger UI
 ├── server.js                  # Express application server & routes
-├── package.json               # Node.js manifest & test scripts
-├── render.yaml                # Render Blueprint deployment specification
-├── .env.example               # Template for environment configuration
-├── .gitignore                 # Excludes .env, node_modules, logs, test artifacts
-│
+├── package.json               # Manifest & test scripts
+├── render.yaml                # Render Blueprint deployment config
+├── .env.example               # Environment variables template
+├── assets/
+│   └── recoup-logo.png        # Official Recoup branding emblem
 ├── db/
-│   ├── database.js            # SQLite connection & query helpers (node:sqlite)
-│   └── schema.sql             # Relational schema (batches, txns, audits, metrics)
-│
+│   ├── database.js            # SQLite connection helper (node:sqlite)
+│   └── schema.sql             # Relational database schema
 ├── guardrails/
 │   └── policy.js              # Deterministic financial safety guardrails engine
-│
 ├── routes/
 │   ├── agent.js               # POST /api/agent/run (batch recovery execution)
 │   ├── batch.js               # POST /api/batch/generate (synthetic batch generator)
 │   ├── guardrails.js          # GET /api/guardrails (active safety policies)
 │   └── results.js             # GET /api/results (metrics, cases, audit logs)
-│
 ├── services/
-│   ├── ai.js                  # Anthropic Claude Haiku 4.5 client + offline fallback
-│   ├── metrics.js             # Dynamic metric aggregation (Risk, Recovered, Rate)
-│   ├── razorpay.js            # Razorpay Test Mode execution & verifier adapter
-│   └── recovery.js            # 8-stage core recovery pipeline orchestrator
-│
+│   ├── ai.js                  # Claude Haiku 4.5 integration + offline fallback
+│   ├── metrics.js             # Revenue at risk & recovery aggregation
+│   ├── razorpay.js            # Razorpay Test Mode execution adapter
+│   └── recovery.js            # 8-stage recovery orchestrator
 └── tests/
-    ├── recovery.test.js       # Phase 1 test suite (DB, Guardrails, Audit, Pipeline)
-    ├── phase2a.test.js        # Phase 2A test suite (Insufficient funds A-F)
-    └── phase2b.test.js        # Phase 2B test suite (AI Diagnosis & Bounds A-H)
+    ├── recovery.test.js       # Phase 1 test suite (DB, Guardrails, Audits)
+    ├── phase2a.test.js        # Phase 2A test suite (Insufficient funds lifecycle)
+    └── phase2b.test.js        # Phase 2B test suite (AI Diagnosis & Bounds)
 ```
 
 ---
 
-## 9. Getting Started
+## 🧪 Local Setup & Verification
 
 ### Prerequisites
-- Node.js version 22.x or later (recommended for native `node:sqlite` support).
+- Node.js v22.x or later
 
-### Installation
+### Installation & Run
 
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/shreyansh-sinha-1509s/Recoup.git
-   cd Recoup
-   ```
+```bash
+# 1. Clone the repository
+git clone https://github.com/shreyansh-sinha-1509s/Recoup.git
+cd Recoup
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+# 2. Install dependencies
+npm install
 
-3. **Configure environment**:
-   ```bash
-   cp .env.example .env
-   ```
+# 3. Configure environment
+cp .env.example .env
 
-4. **Start the server**:
-   ```bash
-   npm start
-   ```
+# 4. Start the local server
+npm start
+```
 
-5. **Open the Control Center**:
-   Navigate to [http://localhost:3000/dashboard.html](http://localhost:3000/dashboard.html) in your browser.
+Access the application locally:
+- **Homepage:** [http://localhost:3000/](http://localhost:3000/)
+- **Control Center:** [http://localhost:3000/dashboard.html](http://localhost:3000/dashboard.html)
 
----
+### Running Automated Tests
 
-## 10. Automated Testing
-
-Run the full end-to-end verification suite:
+Execute the comprehensive test suite validating all phases of the recovery engine:
 
 ```bash
 npm test
 ```
 
-The test suite validates:
-- **Phase 1**: SQLite tables, deterministic guardrails, 8-stage audit logging, separate execute vs. verify states, dynamic metrics.
-- **Phase 2A (Tests A–F)**: Complete insufficient funds lifecycle, attempt limits, failure fallbacks, verification success (`RECOVERED`), verification decline (`ESCALATED`).
-- **Phase 2B (Tests A–H)**: AI diagnosis for ambiguous declines, high-value policy blocks, fraud hold blocks, schema validation, Anthropic offline fallback, and zero-authority AI architecture.
-
 ---
 
-## 11. Demo Mode & Provider Transparency
+## 🏆 Hackathon Context
 
-Recoup operates out-of-the-box with **zero external credentials required**:
-- **Razorpay**: Runs in high-fidelity deterministic `RAZORPAY_TEST_MODE` simulation when API keys are absent. All audit trail messages transparently state:  
-  `"Retry attempt dispatched via Razorpay Test Mode simulation."`
-- **AI Reasoning**: Uses deterministic offline reasoning when `ANTHROPIC_API_KEY` is not provided, tagging audit logs with `provider: offline_fallback`.
-- If valid `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` or `ANTHROPIC_API_KEY` are supplied in `.env`, Recoup automatically switches to live test endpoints without configuration changes.
-
----
-
-## 12. Deployment (Render Web Service)
-
-Recoup is deployed live as a Web Service on **Render**:
-- **Live URL**: [https://recoup-5bdk.onrender.com](https://recoup-5bdk.onrender.com)
-- **Live Dashboard**: [https://recoup-5bdk.onrender.com/dashboard.html](https://recoup-5bdk.onrender.com/dashboard.html)
-- **Health Check**: [https://recoup-5bdk.onrender.com/health](https://recoup-5bdk.onrender.com/health)
-
-### Blueprint Deployment:
-1. Click the **Deploy to Render** button at the top of this README, or create a new **Web Service** on [Render](https://render.com).
-2. Connect the repository `https://github.com/shreyansh-sinha-1509s/Recoup`.
-3. Render automatically provisions the service according to `render.yaml` (`Node` runtime, `npm install`, `npm start`, `/health` check).
-
----
-
-## 13. Security & Safety Principles
-
-- **No Secrets Committed**: `.env` and sensitive files are strictly excluded via `.gitignore`.
-- **Zero Financial Authority for AI**: AI cannot execute payments or alter financial limits.
-- **Immutable Audit Trail**: Every stage of diagnosis, recommendation, authorization, execution, and verification is logged with timestamped actor metadata.
-- **Fail-Safe Defaults**: Malformed inputs, missing keys, or unexpected errors default to safe escalation rather than retrying.
-
----
-
-## 14. Hackathon Context
-
-- **Event**: Razorpay Buildathon 2026
-- **Track**: Track 03 — AI Revenue Recovery
-- **Mission**: Build an autonomous revenue recovery system combining AI diagnosis with deterministic financial guardrails and Razorpay execution.
+- **Event:** Razorpay Buildathon 2026
+- **Track:** Track 03 — AI Revenue Recovery
+- **Mission:** Build an intelligent, bounded revenue recovery system combining AI diagnostic reasoning with deterministic financial guardrails and Razorpay execution.
