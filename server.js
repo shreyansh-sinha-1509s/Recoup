@@ -16,7 +16,30 @@ const PORT = process.env.PORT || 3000;
 db.getDb();
 
 // Middlewares
-app.use(cors());
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Keep requests without an Origin header allowed for direct / server-to-server requests
+        if (!origin) return callback(null, true);
+
+        const isLocal = origin.includes('localhost') || origin.includes('127.0.0.1');
+        const isVercel = origin.endsWith('.vercel.app') || origin === 'https://vercel.app';
+        const isRender = origin.endsWith('.onrender.com');
+        const isAllowed = allowedOrigins.includes(origin) || allowedOrigins.includes('*');
+
+        if (isLocal || isVercel || isRender || isAllowed) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
